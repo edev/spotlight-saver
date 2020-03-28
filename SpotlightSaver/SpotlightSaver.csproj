@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{12DB4A60-BD00-4062-8E71-26BA529722FC}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Main_Application</RootNamespace>
-    <AssemblyName>Main Application</AssemblyName>
+    <RootNamespace>SpotlightSaver</RootNamespace>
+    <AssemblyName>SpotlightSaver</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
