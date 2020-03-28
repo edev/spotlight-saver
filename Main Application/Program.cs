@@ -18,8 +18,13 @@ namespace Main_Application
         // Constants that should eventually be specified by a settings file.
         const string destination_dir = "My Spotlight Backgrounds";
         const string landscape_dir = "Landscape";
+        const bool include_landscape = true;
         const string portrait_dir = "Portrait";
+        const bool include_portrait = false;
         const string square_dir = "Square";
+        const bool include_square = true;
+        const uint min_width = 1080;
+        const uint min_height = 1080;
 
         static void Main(string[] args)
         {
@@ -79,33 +84,53 @@ namespace Main_Application
             // Process each file in the source directory.
             try {
                 foreach (string file in Directory.EnumerateFiles(source_dir)) {
+                    string filename = Path.GetFileName(file);
+
                     if (last_access.HasValue && File.GetLastAccessTime(file) < last_access.Value) {
                         // Our last run was after this file was created, so we should skip it.
+                        Console.WriteLine($"Skipping old file: {filename}");
                         continue;
                     }
 
                     try {
                         using (FileStream stream = File.OpenRead(file)) {
                             BitmapFrame image = new JpegBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.None).Frames[0];
+
+                            if (image.PixelWidth < min_width || image.PixelHeight < min_height) {
+                                // The image is smaller than the minimum dimensions. Skip it.
+                                Console.WriteLine($"Skipping too-small image: {filename}");
+                                continue;
+                            }
+
                             if (image.PixelWidth > image.PixelHeight) {
                                 // Landscape.
-                                copyImage(file, landscape_destination_dir);
+                                if (include_landscape) {
+                                    copyImage(file, landscape_destination_dir);
+                                } else {
+                                    Console.WriteLine($"Excluding landscape image: {filename}");
+                                }
                             } else if (image.PixelWidth < image.PixelHeight) {
                                 // Portrait.
-                                copyImage(file, portrait_destination_dir);
-                            } else {
+                                if (include_portrait) {
+                                    copyImage(file, portrait_destination_dir);
+                                } else {
+                                    Console.WriteLine($"Excluding portrait image: {filename}");
+                                }
+                            } else if (include_square) {
                                 // Square.
                                 copyImage(file, square_destination_dir);
+                                } else {
+                                    Console.WriteLine($"Excluding square image: {filename}");
                             }
                         }
                     } catch (FileFormatException) {
                         // The file wasn't a JPEG image. No need to do anything; just skip it.
-                        Console.WriteLine($"Skipping non-JPEG file: {Path.GetFileName(file)}");
+                        Console.WriteLine($"Skipping non-JPEG file: {filename}");
                         continue;
                     } catch (Exception e) {
                         // Something went wrong with this file. Print an error and skip the file.
-                        Console.Error.WriteLine($"Error processing file: {Path.GetFileName(file)}");
-                        Console.Error.WriteLine(e);
+                        Console.Error.WriteLine($"Error processing file: {filename}");
+                        Console.Error.WriteLine(e.Message);
                         continue;
                     }
                 }
@@ -121,6 +146,7 @@ namespace Main_Application
         private static void copyImage(string source_file_path, string destination_dir) {
             Directory.CreateDirectory(destination_dir);
             string source_filename = Path.GetFileName(source_file_path);
+            Console.WriteLine($"Copying image: {source_filename}.jpg");
             File.Copy(source_file_path, $"{destination_dir}\\{source_filename}.jpg");
         }
     }
