@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace Main_Application
 {
@@ -14,8 +15,19 @@ namespace Main_Application
         static readonly System.Globalization.CultureInfo LAST_ACCESS_CULTURE_INFO = 
             System.Globalization.CultureInfo.InvariantCulture;
 
+        // Constants that should eventually be specified by a settings file.
+        const string destination_dir = "My Spotlight Backgrounds";
+        const string landscape_dir = "Landscape";
+        const string portrait_dir = "Portrait";
+        const string square_dir = "Square";
+
         static void Main(string[] args)
         {
+            // In future, parse a settings file and process it here.
+            string landscape_destination_dir = $"{destination_dir}\\{landscape_dir}";
+            string portrait_destination_dir = $"{destination_dir}\\{portrait_dir}";
+            string square_destination_dir = $"{destination_dir}\\{square_dir}";
+
             string source_dir =
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) +
                 @"\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets";
@@ -67,13 +79,35 @@ namespace Main_Application
             // Process each file in the source directory.
             try {
                 foreach (string file in Directory.EnumerateFiles(source_dir)) {
-                    if(last_access.HasValue && File.GetLastAccessTime(file) < last_access.Value) {
+                    if (last_access.HasValue && File.GetLastAccessTime(file) < last_access.Value) {
                         // Our last run was after this file was created, so we should skip it.
                         continue;
                     }
 
-                    Console.WriteLine(file);
-                    Console.WriteLine(File.GetLastAccessTime(file));
+                    try {
+                        using (FileStream stream = File.OpenRead(file)) {
+                            BitmapFrame image = new JpegBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.None).Frames[0];
+                            if (image.PixelWidth > image.PixelHeight) {
+                                // Landscape.
+                                copyImage(file, landscape_destination_dir);
+                            } else if (image.PixelWidth < image.PixelHeight) {
+                                // Portrait.
+                                copyImage(file, portrait_destination_dir);
+                            } else {
+                                // Square.
+                                copyImage(file, square_destination_dir);
+                            }
+                        }
+                    } catch (FileFormatException) {
+                        // The file wasn't a JPEG image. No need to do anything; just skip it.
+                        Console.WriteLine($"Skipping non-JPEG file: {Path.GetFileName(file)}");
+                        continue;
+                    } catch (Exception e) {
+                        // Something went wrong with this file. Print an error and skip the file.
+                        Console.Error.WriteLine($"Error processing file: {Path.GetFileName(file)}");
+                        Console.Error.WriteLine(e);
+                        continue;
+                    }
                 }
             } catch(Exception e) {
                 // We need to log the error, but we can continue running. It's possible a file might be inaccessable
@@ -82,6 +116,12 @@ namespace Main_Application
                 // for such a simple application, a database is overkill.
                 Console.Error.WriteLine(e);
             }
+        }
+
+        private static void copyImage(string source_file_path, string destination_dir) {
+            Directory.CreateDirectory(destination_dir);
+            string source_filename = Path.GetFileName(source_file_path);
+            File.Copy(source_file_path, $"{destination_dir}\\{source_filename}.jpg");
         }
     }
 }
