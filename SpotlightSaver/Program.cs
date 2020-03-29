@@ -41,50 +41,74 @@ namespace SpotlightSaver
             // Process each file in the source directory.
             try
             {
-                foreach (string file in Directory.EnumerateFiles(source_dir)) {
+                foreach (string file in Directory.EnumerateFiles(source_dir))
+                {
                     string filename = Path.GetFileName(file);
 
-                    try {
-                        using (FileStream stream = File.OpenRead(file)) {
+                    try
+                    {
+                        using (FileStream stream = File.OpenRead(file))
+                        {
                             BitmapFrame image = new JpegBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.None).Frames[0];
 
-                            if (image.PixelWidth < config.MinWidth || image.PixelHeight < config.MinHeight) {
+                            if (image.PixelWidth < config.MinWidth || image.PixelHeight < config.MinHeight)
+                            {
                                 // The image is smaller than the minimum dimensions. Skip it.
                                 Console.WriteLine($"Skipping too-small image: {filename}");
                                 continue;
                             }
 
-                            if (image.PixelWidth > image.PixelHeight) {
+                            if (image.PixelWidth > image.PixelHeight)
+                            {
                                 // Landscape.
-                                if (config.IncludeLandscape) {
+                                if (config.IncludeLandscape)
+                                {
                                     copyImage(file, config.LandscapeFolder);
-                                } else {
+                                }
+                                else
+                                {
                                     Console.WriteLine($"Excluding landscape image: {filename}");
                                 }
-                            } else if (image.PixelWidth < image.PixelHeight) {
+                            }
+                            else if (image.PixelWidth < image.PixelHeight)
+                            {
                                 // Portrait.
-                                if (config.IncludePortrait) {
+                                if (config.IncludePortrait)
+                                {
                                     copyImage(file, config.PortraitFolder);
-                                } else {
+                                }
+                                else
+                                {
                                     Console.WriteLine($"Excluding portrait image: {filename}");
                                 }
-                            } else if (config.IncludeSquare) {
+                            }
+                            else if (config.IncludeSquare)
+                            {
                                 // Square.
                                 copyImage(file, config.SquareFolder);
-                                } else {
-                                    Console.WriteLine($"Excluding square image: {filename}");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Excluding square image: {filename}");
                             }
                         }
-                    } catch (FileFormatException) {
+                    }
+                    catch (FileFormatException)
+                    {
                         // The file wasn't a JPEG image. No need to do anything; just skip it.
                         Console.WriteLine($"Skipping non-JPEG file: {filename}");
                         continue;
-                    } catch (Exception e) {
-                        if (e.Message.IndexOf("exists") >= 0) {
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.Message.IndexOf("exists") >= 0)
+                        {
                             // The file exists, so we'll just skip it. This isn't really an error;
                             // it's normal, expected behavior.
                             Console.WriteLine($"File already exists: {filename}.jpg");
-                        } else {
+                        }
+                        else
+                        {
                             // Something went wrong with this file. Print an error and skip the file.
                             Console.Error.WriteLine($"Error processing file: {filename}");
                             Console.Error.WriteLine(e.Message);
@@ -92,7 +116,9 @@ namespace SpotlightSaver
                         continue;
                     }
                 }
-            } catch(Exception e) {
+            }
+            catch (Exception e)
+            {
                 // We need to log the error, but we can continue running. It's possible a file might be inaccessable
                 // for some reason, in which case it will be skipped. Unfortunately, it will be skipped forever due to
                 // the last access mechanic, but short of maintaining some sort of database, that's unavoidable, and
@@ -101,7 +127,8 @@ namespace SpotlightSaver
             }
         }
 
-        private static void copyImage(string source_file_path, string destination_dir) {
+        private static void copyImage(string source_file_path, string destination_dir)
+        {
             Directory.CreateDirectory(destination_dir);
             string source_filename = Path.GetFileName(source_file_path);
             Console.WriteLine($"Copying image: {source_filename}.jpg");
