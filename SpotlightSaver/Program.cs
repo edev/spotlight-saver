@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,29 +12,35 @@ namespace SpotlightSaver
     class Program
     {
         // Constants that should eventually be specified by a settings file.
-        const string destination_dir = "My Spotlight Backgrounds";
-        const string landscape_dir = "Landscape";
-        const bool include_landscape = true;
-        const string portrait_dir = "Portrait";
-        const bool include_portrait = false;
-        const string square_dir = "Square";
-        const bool include_square = true;
-        const uint min_width = 1080;
-        const uint min_height = 1080;
+        static readonly string source_dir =
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) +
+            @"\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets";
+
+        const string CONFIG_FILE_PATH = "config.json";
 
         static void Main(string[] args)
         {
-            // In future, parse a settings file and process it here.
-            string landscape_destination_dir = $"{destination_dir}\\{landscape_dir}";
-            string portrait_destination_dir = $"{destination_dir}\\{portrait_dir}";
-            string square_destination_dir = $"{destination_dir}\\{square_dir}";
+            // Parse config file and process it. If missing, a default will be generated. Any other failure is fatal.
+            Config config = null;
+            try
+            {
+                config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(CONFIG_FILE_PATH));
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine("Generating default config.json");
+                config = new Config();
+                File.WriteAllText(CONFIG_FILE_PATH, JsonConvert.SerializeObject(config, Formatting.Indented));
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e.Message);
+                System.Environment.Exit(1);
+            }
 
-            string source_dir =
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) +
-                @"\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets";
-            
             // Process each file in the source directory.
-            try {
+            try
+            {
                 foreach (string file in Directory.EnumerateFiles(source_dir)) {
                     string filename = Path.GetFileName(file);
 
@@ -41,7 +48,7 @@ namespace SpotlightSaver
                         using (FileStream stream = File.OpenRead(file)) {
                             BitmapFrame image = new JpegBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.None).Frames[0];
 
-                            if (image.PixelWidth < min_width || image.PixelHeight < min_height) {
+                            if (image.PixelWidth < config.MinWidth || image.PixelHeight < config.MinHeight) {
                                 // The image is smaller than the minimum dimensions. Skip it.
                                 Console.WriteLine($"Skipping too-small image: {filename}");
                                 continue;
@@ -49,21 +56,21 @@ namespace SpotlightSaver
 
                             if (image.PixelWidth > image.PixelHeight) {
                                 // Landscape.
-                                if (include_landscape) {
-                                    copyImage(file, landscape_destination_dir);
+                                if (config.IncludeLandscape) {
+                                    copyImage(file, config.LandscapeFolder);
                                 } else {
                                     Console.WriteLine($"Excluding landscape image: {filename}");
                                 }
                             } else if (image.PixelWidth < image.PixelHeight) {
                                 // Portrait.
-                                if (include_portrait) {
-                                    copyImage(file, portrait_destination_dir);
+                                if (config.IncludePortrait) {
+                                    copyImage(file, config.PortraitFolder);
                                 } else {
                                     Console.WriteLine($"Excluding portrait image: {filename}");
                                 }
-                            } else if (include_square) {
+                            } else if (config.IncludeSquare) {
                                 // Square.
-                                copyImage(file, square_destination_dir);
+                                copyImage(file, config.SquareFolder);
                                 } else {
                                     Console.WriteLine($"Excluding square image: {filename}");
                             }
