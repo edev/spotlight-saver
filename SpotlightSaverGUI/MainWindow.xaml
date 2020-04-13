@@ -16,15 +16,10 @@
             </Grid.ColumnDefinitions>
             
             <GroupBox Grid.Column="0" Header="Autorun">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <RadioButton Grid.Row="0" GroupName="autorun" Name="autorun_on_login" VerticalAlignment="Center">On login</RadioButton>
-                    <RadioButton Grid.Row="1" GroupName="autorun" Name="autorun_disabled" VerticalAlignment="Center">Disabled</RadioButton>
-                </Grid>
+                <StackPanel>
+                    <RadioButton Name="autorun_on_login" VerticalAlignment="Center">On login</RadioButton>
+                    <RadioButton Name="autorun_disabled" VerticalAlignment="Center">Disabled</RadioButton>
+                </StackPanel>
             </GroupBox>
             
             <GroupBox Grid.Column="1" Header="Minimum image size (pixels)">
@@ -56,6 +51,9 @@
         <!-- User control or custom control goes here, probably? -->
         <local:SharedOutputFolder></local:SharedOutputFolder>
 
-        <Button HorizontalAlignment="Right" Width="80">Run now</Button>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button>Run now</Button>
+            <Button IsDefault="True">Save</Button>
+        </StackPanel>
     </StackPanel>
 </Window>

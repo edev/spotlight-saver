@@ -4,6 +4,28 @@
              xmlns:local="clr-namespace:SpotlightSaverGUI"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <!-- Global baseline styles -->
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="MinWidth" Value="80" />
+        </Style>
+
+        <Style TargetType="GroupBox">
+            <Setter Property="Margin" Value="4, 0, 4, 4" />
+        </Style>
+        
+        <Style TargetType="Label">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="RadioButton">
+            <Setter Property="Margin" Value="4" />
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Padding" Value="4" />
+        </Style>
     </Application.Resources>
 </Application>
